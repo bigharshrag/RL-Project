@@ -1,19 +1,23 @@
 import numpy as np
 import gym
 from sarsa_lambda import SarsaLambda
+from tamer import TAMER
 from model import StateActionFeatureVectorWithTile
 import argparse
 import matplotlib.pyplot as plt
 
 def plot_returns(G):
     plt.plot(G)
-    plt.xlabel('Returns')
-    plt.ylabel('Episode')
+    plt.xlabel('Episode')
+    plt.ylabel('Returns')
     plt.show()
 
 def run_sarsa_lamda(args):
     env = gym.make(args.env)
     gamma = 1.
+
+    TAMER(env, 0.9, args.verbose, 10)
+    quit()
 
     X = StateActionFeatureVectorWithTile(
         env.observation_space.low,
@@ -46,8 +50,10 @@ def run_sarsa_lamda(args):
             G += r
         return G
 
+    # MountainCar-v0 defines "solving" as getting average reward of -110.0 over 100 consecutive trials.
     print("Evaluating")
     Gs = [_eval() for _ in  range(100)]
+    print("Average reward over 100 trials: ", np.mean(Gs))
     _eval(True)
 
     plot_returns(Gs)
@@ -66,7 +72,7 @@ if __name__ == "__main__":
     parser.add_argument('--load_path', type=str, default=None)
     parser.add_argument('--iter', type=int, default=2000, help="How many iterations to run the algorithm for")
     parser.add_argument('--verbose', action='store_true')
-    # parser.add_argument('--gamma', type=float, required=True, help="gamma")
+    parser.add_argument('--lambda', type=float, default=0.8, help="lambda")
 
     args = parser.parse_args()
     run_sarsa_lamda(args)
