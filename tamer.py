@@ -1,6 +1,4 @@
 import numpy as np
-import math
-from model import StateFeatureVectorWithTile
 
 def get_human_feedback():
     inp = input()
@@ -10,94 +8,76 @@ def get_human_feedback():
         return -1
     return 0
 
-def TAMER_old(env, alpha, verbose, num_episode):
+def get_feedback_fixed(s, a):
+    pos, vel = s
+    if pos < -0.3 and vel < 0.0:
+        if a == 0:
+            return 1
+        else:
+            return -1
+    elif pos < -0.9 and vel > 0.0:
+        if a == 2:
+            return 1
+        else:
+            return -1
+    elif pos > -0.9 and vel > 0.0:
+        if a == 2:
+            return 1
+        else:
+            return -1
+    return 0
 
-    def virtual_step(env, state, action):
-        assert env.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
-
-        position, velocity = state
-        velocity += (action-1)*env.force + math.cos(3*position)*(-env.gravity)
-        velocity = np.clip(velocity, -env.max_speed, env.max_speed)
-        position += velocity
-        position = np.clip(position, env.min_position, env.max_position)
-        if (position==env.min_position and velocity<0): velocity = 0
-
-        done = bool(position >= env.goal_position and velocity >= env.goal_velocity)
-        reward = -1.0
-
-        s_next = (position, velocity)
-        return np.array(s_next), reward, done, {}
+def TAMER(env, featVec, alpha, verbose, num_episode, credit_range, time_between_h):
 
     def choose_action(state):
-        # print(w)
-        f_t = featVec(state)
-
-        proj_rew = np.zeros(nA)
-        for a in range(nA):
-            state_next, _, _, _ = virtual_step(env, state, a)
-            f_tplus1 = featVec(state_next)
-            delta = f_tplus1 - f_t
-            proj_rew[a] = np.dot(w, delta) 
-
-        return np.argmax(proj_rew)
-
-    def update_reward_model(r, w, state_tminus1, state, a, alpha):
-        f_tminus1, f_t = featVec(state_tminus1), featVec(state)
-        delta_feat = f_t - f_tminus1
-        proj_rew = np.dot(w, delta_feat)
-        error = r - proj_rew
-        print(proj_rew)
-        print(error)
-        print(state_tminus1, state)
-        # print(f_t)
-        # print(f_tminus1)
-        # print(delta_feat)
-        w += alpha * error * delta_feat 
-        return w
-
-    featVec = StateFeatureVectorWithTile(
-        env.observation_space.low,
-        env.observation_space.high,
-        num_tilings=1,
-        # tile_width=np.array([.45,.035])
-        tile_width=np.array([.18,.014])
-    )
+        nA = env.action_space.n
+        actions_vals = [np.dot(w, featVec(state, a)) for a in range(nA)]
+        print(state, np.around(actions_vals, 3), np.argmax(actions_vals))
+        return np.argmax(actions_vals)
     
-    np.set_printoptions(threshold=np.inf, linewidth=500)
-
-    # w = np.load('tamer_t10.npy')
-    # print(w.reshape(10, 11, 11))
-    # print(w)
-    # quit()
-
     w = np.zeros(featVec.feature_vector_len())
-    nA = env.action_space.n
+    # Hyperparameters
+    credit_range = credit_range
+    time_between_h = time_between_h
 
     for i_epi in range(num_episode):
-        state_tminus1, done = env.reset(), False
+        state_prev, done = env.reset(), False
         t = 0
-        a = choose_action(state_tminus1)
-        state, _, done, _ = env.step(a)
+        time_since_h = 0
+        history = []
 
         while not done:
-            t += 1
-            if t % 3 == 0:
-                r = get_human_feedback()
-                if r != 0:
-                    w = update_reward_model(r, w, state_tminus1, state, a, alpha)
-                    print(w.reshape(11,11))
-
-            a = choose_action(state)
-            print(a)
-            state_tplus1, _, done, _ = env.step(a)
-            
-            state_tminus1 = state
-            state = state_tplus1
-            
+            a = choose_action(state_prev)
+            state, _, done, _ = env.step(a)
             env.render()
+            
+            t += 1
+            time_since_h += 1
+            history.append((state, a, time_since_h))
+
+            if t % time_between_h == 0:
+                h = get_human_feedback()
+
+                if h != 0:
+                    credFeat = np.zeros(featVec.feature_vector_len())
+                    # Most recent credit_range actions get credit
+                    for h_s, h_a, h_t in reversed(history[-credit_range:]) :
+                        credit = 1/(credit_range+1)
+                        # credit = 1/(time_since_h - h_t + 1)
+                        credFeat += (credit * featVec(h_s, h_a))
+
+                    proj_rew = np.dot(w, credFeat)
+                    proj_rew = np.clip(proj_rew, -1, 1)
+
+                    error = h - proj_rew
+                    w += alpha * error * credFeat
+
+                    time_since_h = 0
+                    history = []
+
+            state_prev = state
 
         if verbose:
             print("Episode: ", i_epi, " Len: ", t)
-            np.save("tamer_1tiling", w)
 
     return w

@@ -165,8 +165,5 @@ class RBFVector():
         for i, pos_c in enumerate(self.centres[0]):
             for j, v_c in enumerate(self.centres[1]):
                 ret[action][i][j] = np.exp(-((pos - pos_c)**2 / self.std_dev[0]**2)) * np.exp( - ((vel - v_c)**2 / self.std_dev[1]**2) )
-                if ret[action][i][j] > 1:
-                    print("WWWWWWW!")
-        
-        # print("__call__ ", ret)
+
         return ret.flatten()
