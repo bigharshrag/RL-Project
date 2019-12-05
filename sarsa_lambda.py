@@ -6,7 +6,7 @@ def SarsaLambda(
     gamma:float, # discount factor
     lam:float, # decay rate
     alpha:float, # step size
-    X:StateActionFeatureVectorWithTile,
+    X,
     num_episode:int, 
     verbose:bool,
 ) -> np.array:
@@ -16,7 +16,7 @@ def SarsaLambda(
 
     def epsilon_greedy_policy(s,done,w,epsilon=.0):
         nA = env.action_space.n
-        Q = [np.dot(w, X(s,done,a)) for a in range(nA)]
+        Q = [np.dot(w, X(s, a, done)) for a in range(nA)]
 
         if np.random.rand() < epsilon:
             return np.random.randint(nA)
@@ -28,7 +28,7 @@ def SarsaLambda(
     for i_epi in range(num_episode):
         state, done = env.reset(), False
         a = epsilon_greedy_policy(state, done, w)
-        x = X(state, done, a)
+        x = X(state, a, done)
         z = np.zeros((X.feature_vector_len()))
         Q_old = 0
 
@@ -39,7 +39,7 @@ def SarsaLambda(
             # env.render()
 
             a_dash = epsilon_greedy_policy(s_dash, done, w)
-            x_dash = X(s_dash, done, a_dash)
+            x_dash = X(s_dash, a_dash, done)
             Q = np.dot(w, x)
             Q_dash = np.dot(w, x_dash)
 

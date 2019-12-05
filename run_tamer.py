@@ -26,8 +26,8 @@ def run_tamer(args):
     else:
         w = np.load(args.load_path)
 
-    def greedy_policy(s):
-        H = [np.dot(w, featVec(s, a)) for a in range(env.action_space.n)]
+    def greedy_policy(s, done):
+        H = [np.dot(w, featVec(s, a, done)) for a in range(env.action_space.n)]
         return np.argmax(H)
 
     def _eval(render=False):
@@ -36,7 +36,7 @@ def run_tamer(args):
 
         G = 0.
         while not done:
-            a = greedy_policy(s)
+            a = greedy_policy(s, done)
             s, r, done, _ = env.step(a)
             if render: env.render()
 

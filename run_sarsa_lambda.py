@@ -1,7 +1,7 @@
 import numpy as np
 import gym
 from sarsa_lambda import SarsaLambda
-from model import StateActionFeatureVectorWithTile
+from model import StateActionFeatureVectorWithTile, RBFVector
 import argparse
 import matplotlib.pyplot as plt
 
@@ -15,13 +15,20 @@ def run_sarsa_lamda(args):
     env = gym.make(args.env)
     gamma = 1.
 
-    X = StateActionFeatureVectorWithTile(
-        env.observation_space.low,
-        env.observation_space.high,
-        env.action_space.n,
-        num_tilings=10,
-        tile_width=np.array([.45,.035])
-    )
+    if args.tile:
+        X = StateActionFeatureVectorWithTile(
+            env.observation_space.low,
+            env.observation_space.high,
+            env.action_space.n,
+            num_tilings=10,
+            tile_width=np.array([.45,.035])
+        )
+    else:
+        X = RBFVector(
+            env.observation_space.low,
+            env.observation_space.high,
+            env.action_space.n,
+            [10, 10])
 
     if args.load_path == None:
         w = SarsaLambda(env, gamma, 0.8, 0.01, X, args.iter, args.verbose)
@@ -30,7 +37,7 @@ def run_sarsa_lamda(args):
         w = np.load(args.load_path)
 
     def greedy_policy(s,done):
-        Q = [np.dot(w, X(s,done,a)) for a in range(env.action_space.n)]
+        Q = [np.dot(w, X(s, a, done)) for a in range(env.action_space.n)]
         return np.argmax(Q)
 
     def _eval(render=False):
@@ -39,7 +46,7 @@ def run_sarsa_lamda(args):
 
         G = 0.
         while not done:
-            a = greedy_policy(s,done)
+            a = greedy_policy(s, done)
             s,r,done,_ = env.step(a)
             if render: env.render()
 
@@ -68,6 +75,7 @@ if __name__ == "__main__":
     parser.add_argument('--load_path', type=str, default=None)
     parser.add_argument('--iter', type=int, default=2000, help="How many iterations to run the algorithm for")
     parser.add_argument('--verbose', action='store_true')
+    parser.add_argument('--tile', action='store_true')
     parser.add_argument('--lambda', type=float, default=0.8, help="lambda")
 
     args = parser.parse_args()

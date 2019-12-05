@@ -117,7 +117,7 @@ class StateActionFeatureVectorWithTile():
         return self.f_vec_len
 
 
-    def __call__(self, s, done, a) -> np.array:
+    def __call__(self, s, a, done) -> np.array:
         """
         implement function x: S+ x A -> [0,1]^d
         if done is True, then return 0^d
@@ -159,7 +159,7 @@ class RBFVector():
     def feature_vector_len(self):
         return self.feat_vec_sz
 
-    def __call__(self, state, action):
+    def __call__(self, state, action, done=False):
         pos, vel = state
         ret = np.zeros(self.feat_size)
         for i, pos_c in enumerate(self.centres[0]):
