@@ -163,7 +163,8 @@ class RBFVector():
         pos, vel = state
         ret = np.zeros(self.feat_size)
         for i, pos_c in enumerate(self.centres[0]):
-            for j, v_c in enumerate(self.centres[1]):
-                ret[action][i][j] = np.exp(-((pos - pos_c)**2 / self.std_dev[0]**2)) * np.exp( - ((vel - v_c)**2 / self.std_dev[1]**2) )
+            ret[action][i, :] = np.exp(-((pos - pos_c)**2 / self.std_dev[0]**2))
+        for j, v_c in enumerate(self.centres[1]):
+            ret[action][:, j] *= np.exp( - ((vel - v_c)**2 / self.std_dev[1]**2) )
 
         return ret.flatten()
