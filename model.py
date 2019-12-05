@@ -61,8 +61,10 @@ class StateFeatureVectorWithTile():
         for i_t, tiling in enumerate(self.tilings):
             d0 = int(np.floor( (s[0] - self.tiling_start[i_t][0])/self.tile_width[0] ))
             d1 = int(np.floor( (s[1] - self.tiling_start[i_t][1])/self.tile_width[1] ))
+            # print(d0, d1)
             x[i_t][d0][d1] = 1
         
+        # print()
         return x.flatten()
 
 
@@ -134,3 +136,37 @@ class StateActionFeatureVectorWithTile():
             x[a][i_t][d0][d1] = 1
         
         return x.flatten()
+
+
+
+class RBFVector():
+    def __init__(self, state_low, state_high, num_actions, n_divs):
+        self.num_actions = num_actions
+        self.state_dim = len(state_low)
+        self.n_divs = n_divs
+
+        self.feat_size = [num_actions] + n_divs
+        self.feat_vec_sz = np.prod(self.feat_size)
+
+        self.centres = []
+        self.std_dev = np.zeros(self.state_dim)
+
+        for dim in range(self.state_dim):
+            x = np.linspace(state_low[dim], state_high[dim], n_divs[dim])
+            self.centres.append(x)
+            self.std_dev[dim] = x[1] - x[0]
+
+    def feature_vector_len(self):
+        return self.feat_vec_sz
+
+    def __call__(self, state, action):
+        pos, vel = state
+        ret = np.zeros(self.feat_size)
+        for i, pos_c in enumerate(self.centres[0]):
+            for j, v_c in enumerate(self.centres[1]):
+                ret[action][i][j] = np.exp(-((pos - pos_c)**2 / self.std_dev[0]**2)) * np.exp( - ((vel - v_c)**2 / self.std_dev[1]**2) )
+                if ret[action][i][j] > 1:
+                    print("WWWWWWW!")
+        
+        # print("__call__ ", ret)
+        return ret.flatten()

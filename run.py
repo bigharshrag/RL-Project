@@ -1,7 +1,8 @@
 import numpy as np
 import gym
 from sarsa_lambda import SarsaLambda
-from tamer import TAMER
+# from tamer import TAMER
+from tamer_nai import TAMER
 from model import StateActionFeatureVectorWithTile
 import argparse
 import matplotlib.pyplot as plt

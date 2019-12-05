@@ -10,7 +10,7 @@ def get_human_feedback():
         return -1
     return 0
 
-def TAMER(env, alpha, verbose, num_episode):
+def TAMER_old(env, alpha, verbose, num_episode):
 
     def virtual_step(env, state, action):
         assert env.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
@@ -46,18 +46,30 @@ def TAMER(env, alpha, verbose, num_episode):
         delta_feat = f_t - f_tminus1
         proj_rew = np.dot(w, delta_feat)
         error = r - proj_rew
-        # print(proj_rew)
-        # print(error)
+        print(proj_rew)
+        print(error)
+        print(state_tminus1, state)
+        # print(f_t)
+        # print(f_tminus1)
+        # print(delta_feat)
         w += alpha * error * delta_feat 
         return w
 
     featVec = StateFeatureVectorWithTile(
         env.observation_space.low,
         env.observation_space.high,
-        num_tilings=10,
-        tile_width=np.array([.45,.035])
+        num_tilings=1,
+        # tile_width=np.array([.45,.035])
+        tile_width=np.array([.18,.014])
     )
     
+    np.set_printoptions(threshold=np.inf, linewidth=500)
+
+    # w = np.load('tamer_t10.npy')
+    # print(w.reshape(10, 11, 11))
+    # print(w)
+    # quit()
+
     w = np.zeros(featVec.feature_vector_len())
     nA = env.action_space.n
 
@@ -73,9 +85,10 @@ def TAMER(env, alpha, verbose, num_episode):
                 r = get_human_feedback()
                 if r != 0:
                     w = update_reward_model(r, w, state_tminus1, state, a, alpha)
+                    print(w.reshape(11,11))
 
             a = choose_action(state)
-            # print(a)
+            print(a)
             state_tplus1, _, done, _ = env.step(a)
             
             state_tminus1 = state
@@ -85,5 +98,6 @@ def TAMER(env, alpha, verbose, num_episode):
 
         if verbose:
             print("Episode: ", i_epi, " Len: ", t)
+            np.save("tamer_1tiling", w)
 
     return w
