@@ -1,20 +1,21 @@
 import numpy as np
 from model import StateActionFeatureVectorWithTile
 
-def SarsaLambda(
+def TAMER_RL(
     env, # openai gym environment
     gamma:float, # discount factor
     lam:float, # decay rate
     alpha:float, # step size
     X,
+    w_H,
     num_episode:int, 
     verbose:bool,
 ) -> np.array:
     """
-    True online Sarsa(\lambda)
+    TAMER + RL 
     """
 
-    def epsilon_greedy_policy(s,done,w,epsilon=.0):
+    def epsilon_greedy_policy(s, done, w, epsilon=.0):
         nA = env.action_space.n
         Q = [np.dot(w, X(s, a, done)) for a in range(nA)]
 
@@ -23,8 +24,21 @@ def SarsaLambda(
         else:
             return np.argmax(Q)
 
-    w = np.zeros((X.feature_vector_len()))
-    # w = np.full((X.feature_vector_len()), -120.0)
+
+    def type6_action(s, done, w, w_h, h_alpha, epsilon=.0):
+        nA = env.action_space.n
+        Q = [np.dot(w, X(s, a, done)) + (h_alpha * np.dot(w_h, X(s, a, done)))  for a in range(nA)]
+        # print(Q)
+
+        if np.random.rand() < epsilon:
+            return np.random.randint(nA)
+        else:
+            return np.argmax(Q)
+
+
+    # w = np.zeros((X.feature_vector_len()))
+    w = np.full((X.feature_vector_len()), -120.0)
+    h_alpha = 0.98
 
     for i_epi in range(num_episode):
         state, done = env.reset(), False
@@ -34,12 +48,14 @@ def SarsaLambda(
         Q_old = 0
 
         ep_len = 0
+        h_alpha *= 0.99
         while not done:
             s_dash, R, done, _ = env.step(a)
             ep_len += 1
             # env.render()
 
-            a_dash = epsilon_greedy_policy(s_dash, done, w)
+            # a_dash = epsilon_greedy_policy(s_dash, done, w)
+            a_dash = type6_action(s_dash, done, w, w_H, h_alpha)
             x_dash = X(s_dash, a_dash, done)
             Q = np.dot(w, x)
             Q_dash = np.dot(w, x_dash)
@@ -57,4 +73,3 @@ def SarsaLambda(
             print("Episode: ", i_epi, " Len: ", ep_len)
 
     return w
-

@@ -67,7 +67,7 @@ def TAMER(env, featVec, alpha, verbose, num_episode, credit_range, time_between_
                         credFeat += (credit * featVec(h_s, h_a))
 
                     proj_rew = np.dot(w, credFeat)
-                    proj_rew = np.clip(proj_rew, -1, 1)
+                    # proj_rew = np.clip(proj_rew, -1, 1)
 
                     error = h - proj_rew
                     w += alpha * error * credFeat
