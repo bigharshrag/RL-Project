@@ -20,6 +20,24 @@ def DEMO_TAMER_RL(
     DEMOS + TAMER + RL 
     """
 
+    def greedy_policy(s,done):
+        Q = [np.dot(w, X(s, a, done)) for a in range(env.action_space.n)]
+        # Q = [np.tanh( np.dot(w, X(s, a, done)) ) for a in range(env.action_space.n)]
+        return np.argmax(Q)
+
+    def _eval(render=False):
+        s, done = env.reset(), False
+        if render: env.render()
+
+        G = 0.
+        while not done:
+            a = greedy_policy(s, done)
+            s,r,done,_ = env.step(a)
+            if render: env.render()
+
+            G += r
+        return G
+
     def epsilon_greedy_policy(s, done, w, epsilon=.0):
         nA = env.action_space.n
         Q = [np.dot(w, X(s, a, done)) for a in range(nA)]
@@ -38,17 +56,28 @@ def DEMO_TAMER_RL(
         # print(Q)
 
         if np.random.rand() < epsilon:
-            return np.argmax([np.dot(w_D, X(s, a)) for a in range(nA)])
+            curr = X(s, 0)
+            minp = np.argmin(np.sum(np.abs(state_feat - curr), axis=1))                                
+            # return np.argmax([np.dot(w_D, X(s, a)) for a in range(nA)])
+            return state_feat_ac[minp]
         else:
             return np.argmax(Q)
 
 
     # w = np.zeros((X.feature_vector_len()))
     w_D = np.full((X.feature_vector_len()), -150.0)
+    state_feat = []
+    state_feat_ac = []
+    for di, dem in enumerate(demos):
+        print(di)
+        for ps, pa, _ in dem:
+            state_feat.append(X(ps, 0))
+            state_feat_ac.append(pa)
+    state_feat = np.array(state_feat)
 
     R = -1
     print("No of demos: ", len(demos))
-    for _ in range(1):
+    for _ in range(0):
         for i_epi, demo in enumerate(demos):
             z = np.zeros((X.feature_vector_len()))
             Q_old = 0
@@ -83,7 +112,7 @@ def DEMO_TAMER_RL(
 
     w = np.full((X.feature_vector_len()), -150.0)
     h_alpha = 0.98
-    demo_epsilon = 0.99
+    # demo_epsilon = 0.8
 
     for i_epi in range(num_episode):
         state, done = env.reset(), False
@@ -94,14 +123,14 @@ def DEMO_TAMER_RL(
 
         ep_len = 0
         h_alpha *= 0.95
-        demo_epsilon *= 0.98
+        # demo_epsilon *= 1
         while not done:
             s_dash, R, done, _ = env.step(a)
             ep_len += 1
             # env.render()
 
             # a_dash = epsilon_greedy_policy(s_dash, done, w, 0.3)
-            a_dash = type6_action(s_dash, done, w, w_H, w_D, h_alpha, epsilon=demo_epsilon)
+            a_dash = type6_action(s_dash, done, w, w_H, w_D, h_alpha, epsilon=np.random.normal(0.7, 0.3))
             x_dash = X(s_dash, a_dash, done)
             Q = np.dot(w, x)
             Q_dash = np.dot(w, x_dash)
@@ -117,6 +146,10 @@ def DEMO_TAMER_RL(
 
         if verbose:
             print("Episode: ", i_epi, " Len: ", ep_len)
+            if i_epi % 50 == 0:
+                print("Evaluating", i_epi)
+                Gs = [_eval() for _ in  range(100)]
+                print("Average reward over 100 trials: ", np.mean(Gs))
 
     return w
 
