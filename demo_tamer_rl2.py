@@ -32,13 +32,13 @@ def DEMO_TAMER_RL(
 
     def type6_action(s, done, w, w_h, w_D, h_alpha, epsilon=.0):
         nA = env.action_space.n
-        Q = [ np.dot(w, X(s, a, done)) + (h_alpha * np.dot(w_h, X(s, a, done))) + h_alpha * np.dot(w_D, X(s, a))  for a in range(nA)]
+        # Q = [ np.dot(w, X(s, a, done)) + (h_alpha * np.dot(w_h, X(s, a, done))) + h_alpha*2*np.dot(w_D, X(s, a))  for a in range(nA)]
         # Q = [np.tanh( np.dot(w, X(s, a, done)) ) + (h_alpha/2 * np.dot(w_h, X(s, a, done))) + (h_alpha * np.tanh(np.dot(w_D, X(s, a))))  for a in range(nA)]
-        # Q = [np.dot(w, X(s, a, done)) + (h_alpha * np.dot(w_h, X(s, a, done)))  for a in range(nA)]
+        Q = [np.tanh(np.dot(w, X(s, a, done))) + (h_alpha * np.dot(w_h, X(s, a, done)))  for a in range(nA)]
         # print(Q)
 
         if np.random.rand() < epsilon:
-            return np.random.randint(nA)
+            return np.argmax(np.dot(w_D, X(s, a)))
         else:
             return np.argmax(Q)
 
@@ -48,7 +48,7 @@ def DEMO_TAMER_RL(
 
     R = -1
     print("No of demos: ", len(demos))
-    for _ in range(3):
+    for _ in range(1):
         for i_epi, demo in enumerate(demos):
             z = np.zeros((X.feature_vector_len()))
             Q_old = 0
@@ -57,8 +57,8 @@ def DEMO_TAMER_RL(
             for t in range(len(demo) - 1):
                 s, a, s_dash = demo[t]
 
-                s[0] += np.random.normal(0, 0.005)
-                s_dash[0] += np.random.normal(0, 0.005)
+                # s[0] += np.random.normal(0, 0.005)
+                # s_dash[0] += np.random.normal(0, 0.005)
 
                 x = X(s, a)
                 a_dash = demo[t+1][1]
@@ -83,6 +83,7 @@ def DEMO_TAMER_RL(
 
     w = np.full((X.feature_vector_len()), -150.0)
     h_alpha = 0.98
+    demo_epsilon = 0.99
 
     for i_epi in range(num_episode):
         state, done = env.reset(), False
@@ -93,13 +94,14 @@ def DEMO_TAMER_RL(
 
         ep_len = 0
         h_alpha *= 0.95
+        demo_epsilon *= 0.98
         while not done:
             s_dash, R, done, _ = env.step(a)
             ep_len += 1
             # env.render()
 
             # a_dash = epsilon_greedy_policy(s_dash, done, w, 0.3)
-            a_dash = type6_action(s_dash, done, w, w_H, w_D, h_alpha)
+            a_dash = type6_action(s_dash, done, w, w_H, w_D, h_alpha, epsilon=demo_epsilon)
             x_dash = X(s_dash, a_dash, done)
             Q = np.dot(w, x)
             Q_dash = np.dot(w, x_dash)
