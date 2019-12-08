@@ -38,7 +38,7 @@ def DEMO_TAMER_RL(
         # print(Q)
 
         if np.random.rand() < epsilon:
-            return np.argmax(np.dot(w_D, X(s, a)))
+            return np.argmax([np.dot(w_D, X(s, a)) for a in range(nA)])
         else:
             return np.argmax(Q)
 
