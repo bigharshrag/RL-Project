@@ -27,7 +27,8 @@ def TAMER_RL(
 
     def type6_action(s, done, w, w_h, h_alpha, epsilon=.0):
         nA = env.action_space.n
-        Q = [np.dot(w, X(s, a, done)) + (h_alpha * np.dot(w_h, X(s, a, done)))  for a in range(nA)]
+        Q = [np.tanh( np.dot(w, X(s, a, done)) ) + (h_alpha * np.dot(w_h, X(s, a, done)))  for a in range(nA)]
+        # Q = [np.dot(w, X(s, a, done)) + (h_alpha * np.dot(w_h, X(s, a, done)))  for a in range(nA)]
         # print(Q)
 
         if np.random.rand() < epsilon:
@@ -37,7 +38,7 @@ def TAMER_RL(
 
 
     # w = np.zeros((X.feature_vector_len()))
-    w = np.full((X.feature_vector_len()), -120.0)
+    w = np.full((X.feature_vector_len()), -150.0)
     h_alpha = 0.98
 
     for i_epi in range(num_episode):
@@ -54,7 +55,7 @@ def TAMER_RL(
             ep_len += 1
             # env.render()
 
-            # a_dash = epsilon_greedy_policy(s_dash, done, w)
+            # a_dash = epsilon_greedy_policy(s_dash, done, w, 0.3)
             a_dash = type6_action(s_dash, done, w, w_H, h_alpha)
             x_dash = X(s_dash, a_dash, done)
             Q = np.dot(w, x)

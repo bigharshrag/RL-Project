@@ -23,9 +23,9 @@ X = RBFVector(
         env.action_space.n,
         [10, 10])
 
-w_sarsa_opt = np.load('sarsa_opt.npy')
+w_sarsa_opt = np.load('sarsa_good.npy')
 w_sarsa_pess = np.load('sarsa_rbf.npy')
-w_tamer_rl = np.load('tamer_rl.npy')
+w_tamer_rl = np.load('tanh2.npy')
 
 Gs_sopt = [_eval(w_sarsa_opt) for _ in  range(100)]
 print("Average reward over 100 trials: ", np.mean(Gs_sopt))
