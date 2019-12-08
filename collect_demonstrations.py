@@ -55,7 +55,7 @@ def collect_demos(env, num_demo, save_path):
             env.render()
             print(state, t)
             a = get_action()
-            a = get_feedback_fixed(state)
+            # a = get_feedback_fixed(state)
             state_dash, R, done, _ =  env.step(a)
             
             demos[-1].append((state, a, state_dash))
@@ -77,5 +77,6 @@ if __name__ == "__main__":
     np.set_printoptions(suppress=True)
 
     collect_demos(env, args.num_demo, args.save_path)
+    env.close()
     # dem = np.load('Saved_weights/demos.npy')
     # print(len(dem[0]))

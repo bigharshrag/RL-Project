@@ -24,7 +24,8 @@ gamma = 1
 # w = np.zeros(X.feature_vector_len())
 w = np.full(X.feature_vector_len(), -200.0)
 trajs = np.load("Saved_weights/demos.npy")
-epoch = 200
+print("No of demos: ", len(trajs))
+epoch = 50
 
 for ep in range(epoch):
     print(ep)
@@ -33,7 +34,7 @@ for ep in range(epoch):
             s, a, _ = traj[i]
 
             s[0] += np.random.normal(0, 0.005)
-            s[1] += np.random.normal(0, 0.00005)
+            # s[1] += np.random.normal(0, 0.00009)
 
             if i == len(traj) - 1:
                 w += alpha * (-1 - np.dot(w, X(s, a))) * X(s, a)
@@ -67,5 +68,5 @@ print("Average time to completion over 100 trials: ", np.mean(Gs))
 _eval(True)
 
 plot_returns(Gs)
-
+env.close()
 np.save("Saved_weights/q_demos.npy", w)
