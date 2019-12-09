@@ -47,12 +47,12 @@ def run_tamer_rl(args):
         return G
 
     # MountainCar-v0 defines "solving" as getting average reward of -110.0 over 100 consecutive trials.
-    print("Evaluating")
-    Gs = [_eval() for _ in  range(100)]
-    print("Average reward over 100 trials: ", np.mean(Gs))
-    _eval(True)
+    # print("Evaluating")
+    # Gs = [_eval() for _ in  range(100)]
+    # print("Average reward over 100 trials: ", np.mean(Gs))
+    # _eval(True)
 
-    plot_returns(Gs)
+    # plot_returns(Gs)
 
 
 if __name__ == "__main__":
@@ -66,11 +66,11 @@ if __name__ == "__main__":
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--save_path', type=str, default='tamer_rl.npy')
     parser.add_argument('--load_path', type=str, default=None)
-    parser.add_argument('--load_H', type=str, default='tamer.npy')
-    parser.add_argument('--iter', type=int, default=1000, help="How many iterations to run the algorithm for")
+    parser.add_argument('--load_H', type=str, default='Saved_weights/tamer.npy')
+    parser.add_argument('--iter', type=int, default=500, help="How many iterations to run the algorithm for")
     parser.add_argument('--verbose', action='store_true')
     parser.add_argument('--tile', action='store_true')
-    parser.add_argument('--lambda', type=float, default=0.8, help="lambda")
+    parser.add_argument('--lambda', type=float, default=0.98, help="lambda")
 
     args = parser.parse_args()
     run_tamer_rl(args)

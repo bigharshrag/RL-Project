@@ -1,5 +1,5 @@
 import numpy as np
-from model import StateActionFeatureVectorWithTile
+from utils import evaluate
 
 def SarsaLambda(
     env, # openai gym environment
@@ -52,6 +52,9 @@ def SarsaLambda(
             Q_old = Q_dash
             x = x_dash
             a = a_dash
+
+        if (i_epi+1) % 50 == 0:
+            print(i_epi+1, evaluate(env, w, X))
 
         if verbose:
             print("Episode: ", i_epi, " Len: ", ep_len)
