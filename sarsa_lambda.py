@@ -23,8 +23,8 @@ def SarsaLambda(
         else:
             return np.argmax(Q)
 
-    w = np.zeros((X.feature_vector_len()))
-    # w = np.full((X.feature_vector_len()), -120.0)
+    # w = np.zeros((X.feature_vector_len()))
+    w = np.full((X.feature_vector_len()), -150.0)
 
     for i_epi in range(num_episode):
         state, done = env.reset(), False

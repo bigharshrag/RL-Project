@@ -38,7 +38,7 @@ def TAMER_RL(
 
 
     # w = np.zeros((X.feature_vector_len()))
-    w = np.full((X.feature_vector_len()), -150.0)
+    w = np.full((X.feature_vector_len()), -10.0)
     h_alpha = 0.98
 
     for i_epi in range(num_episode):
